@@ -42,7 +42,7 @@ A browser window will open with the 3D visualization and control panel.
 - `Reset Cloth`: reset the cloth to its initial state
 - `Sliders`: adjust gravity, particle mass, wind strength, wind angle, and time-step in real time
 - `Integrator dropdown`: switch between RK4 and Euler
-- `Cloth Generation panel`: configure grid size, spacing, spring constants, damping, and pinning, then click Generate Cloth to rebuild
+- `Cloth Generation panel`: configure grid size, spacing, spring constants, damping, and pinning, then click **Generate Cloth** to rebuild
 
 ## Project Structure
 ```
