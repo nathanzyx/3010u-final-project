@@ -24,7 +24,7 @@ Activate the virtual environment:
 # for Windows:
 .venv\Scripts\activate
 
-# for macOS / Linux:
+# for macOS/Linux:
 source .venv/bin/activate
 ```
 
