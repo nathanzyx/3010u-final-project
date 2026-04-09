@@ -1,3 +1,10 @@
+"""
+File: simulation/integrators.py
+Author: Nathan Tandory <nathtand@gmail.com>
+Date: 2026-04-09
+Description: Numerical integrators for the 3D mass-spring-damper cloth simulation.
+"""
+
 import numpy as np
 from enum import Enum
 
@@ -17,7 +24,5 @@ class integrator(Enum):
 
     def __call__(self, state: np.ndarray, dt: float, function) -> np.ndarray:
         match self:
-            case integrator.EULER:
-                return euler(state, dt, function)
-            case integrator.RK4:
-                return rk4(state, dt, function)
+            case integrator.EULER: return euler(state, dt, function)
+            case integrator.RK4: return rk4(state, dt, function)

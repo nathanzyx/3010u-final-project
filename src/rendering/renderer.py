@@ -1,33 +1,41 @@
+"""
+File: rendering/renderer.py
+Author: Nathan Tandory <nathtand@gmail.com>
+Date: 2026-04-09
+Description: Renderer for the 3D mass-spring-damper cloth simulation.
+"""
+
 import threading
 import numpy as np
+import os, signal
 from vpython import canvas, vector, triangle, vertex, color, sphere, slider, wtext, button, menu, winput
 from simulation.integrators import integrator as integ_enum
 from simulation.simulation import simulation
-import os, signal
+from config import cloth_config, sim_params
 
 DEFAULTS = {
     # cloth_config defaults
-    "rows": 18,
-    "columns": 12,
-    "spacing": 0.2,
-    "pin_top_row": True,
-    "pin_top_corners": False,
-    "pin_left_column": False,
-    "pin_right_column": False,
-    "pin_all_edges": False,
+    "rows": cloth_config["rows"],
+    "columns": cloth_config["columns"],
+    "spacing": cloth_config["spacing"],
+    "pin_top_row": cloth_config["pin_top_row"],
+    "pin_top_corners": cloth_config["pin_top_corners"],
+    "pin_left_column": cloth_config["pin_left_column"],
+    "pin_right_column": cloth_config["pin_right_column"],
+    "pin_all_edges": cloth_config["pin_all_edges"],
 
     # simulation parameter defaults
-    "particle_mass": 0.05,
-    "k_structural": 200.0,
-    "k_shear": 200.0,
-    "k_bend": 75.0,
-    "damping": 0.8,
-    "gravity": np.array([0.0, -9.8, 0.0]),
-    "wind_strength": 0.0,
-    "wind_angle": 90.0,
-    "dt": 0.0075,
-    "integrator": "RK4",
-    "title": "Cloth Simulation"
+    "particle_mass": sim_params["particle_mass"],
+    "k_structural": sim_params["k_structural"],
+    "k_shear": sim_params["k_shear"],
+    "k_bend": sim_params["k_bend"],
+    "damping": sim_params["damping"],
+    "gravity": sim_params["gravity"],
+    "wind_strength": sim_params["wind_strength"],
+    "wind_angle": sim_params["wind_angle"],
+    "dt": sim_params["dt"],
+    "integrator": sim_params["integrator"],
+    "title": sim_params["title"]
 }
 
 class renderer:
@@ -50,11 +58,11 @@ class renderer:
             width = 1080,
             height = 1080,
             center = vector(
-                self.cloth.config.columns * self.cloth.config.spacing / 2,
-                -self.cloth.config.rows * self.cloth.config.spacing / 2,
+                self.cloth.config["columns"] * self.cloth.config["spacing"] / 2,
+                -self.cloth.config["rows"] * self.cloth.config["spacing"] / 2,
                 0
             ),
-            background = vector(0.2, 0.2, 0.2)
+            background = vector(241/255, 242/255, 244/255)
         )
 
         # rendering objects
@@ -111,7 +119,7 @@ class renderer:
             self.pin_markers.append(
                 sphere(
                     pos = vector(position[0], position[1], position[2]),
-                    radius = self.cloth.config.spacing * 0.05,
+                    radius = self.cloth.config["spacing"] * 0.05,
                     color = color.white
                 )
             )
@@ -137,14 +145,14 @@ class renderer:
         rebuilds the scene mesh:
             - destroys the current mesh
             - builds a new mesh
-            - re-centers the camera around the new mesh
+            - re-centers the camera around the new mesh (for larger/smaller sizes)
         """
         with self._lock:
             self._destroy_mesh()
             self._build_mesh()
             self.scene.center = vector(
-                self.cloth.config.columns * self.cloth.config.spacing / 2,
-                -self.cloth.config.rows * self.cloth.config.spacing / 2,
+                self.cloth.config["columns"] * self.cloth.config["spacing"] / 2,
+                -self.cloth.config["rows"] * self.cloth.config["spacing"] / 2,
                 0
             )
 
@@ -217,7 +225,6 @@ class renderer:
         parameters:
             - 'evt : any': event object
         """
-        from models.cloth import cloth_config
  
         def read_input(inp, default, min_val = None, max_val = None, as_int = False) -> float | int:
             """
@@ -272,16 +279,16 @@ class renderer:
 
         with self._lock:
             # rebuild cloth
-            new_config = cloth_config(
-                rows=rows, 
-                columns=columns, 
-                spacing=spacing,
-                pin_top_row=pin_top_row,
-                pin_top_corners=pin_top_corners,
-                pin_left_column=pin_left_column,
-                pin_right_column=pin_right_column,
-                pin_all_edges=pin_all_edges,
-            )
+            new_config = {
+                "rows": rows,
+                "columns": columns,
+                "spacing": spacing,
+                "pin_top_row": pin_top_row,
+                "pin_top_corners": pin_top_corners,
+                "pin_left_column": pin_left_column,
+                "pin_right_column": pin_right_column,
+                "pin_all_edges": pin_all_edges
+            }
             self.simulation.rebuild_cloth(new_config)
             self.cloth = self.simulation.cloth
     
@@ -350,11 +357,9 @@ class renderer:
                 p0 = self.vertices[i].pos
                 p1 = self.vertices[j].pos
                 p2 = self.vertices[k].pos
-                edge1 = p1 - p0
-                edge2 = p2 - p0
-                normal = edge1.cross(edge2)
-                if normal.mag > 0.000001:
-                    normal = normal.hat
+                edge1 = p1 - p0 # p0 -> p1
+                edge2 = p2 - p0 # p0 -> p2
+                normal = edge1.cross(edge2) # face normal
                 self.vertices[i].normal = normal
                 self.vertices[j].normal = normal
                 self.vertices[k].normal = normal
@@ -402,7 +407,7 @@ class renderer:
             self._reset_param("particle_mass", self.mass_label, "{:.3f}"))
         s.append_to_caption("\n")
         self.sliders["particle_mass"] = slider(
-            min = 0.05, max = 0.5, value = params["particle_mass"], step = 0.001, length = 300,
+            min = 0.05, max = 5.0, value = params["particle_mass"], step = 0.001, length = 300,
             bind = lambda sl, n = "particle_mass", l = None: 
                 self._update_param(n, sl.value, self.mass_label, f"{sl.value:.3f}")
         )
@@ -455,7 +460,7 @@ class renderer:
                     m.selected
                 )
         )
-        s.append_to_caption("\n\n\n")
+        s.append_to_caption("\n\n")
 
         # time step
         s.append_to_caption("Time Step (dt): ")
@@ -471,11 +476,11 @@ class renderer:
             bind = lambda sl, n = "dt", l = None: 
                 self._update_param(n, sl.value, self.dt_label, f"{sl.value:.4f}")
         )
-        s.append_to_caption("\n\n")
+        s.append_to_caption("\n\n\n")
  
 
         # cloth generation section
-        s.append_to_caption("─" * 40 + "\n")
+        s.append_to_caption("─" * 40 + "\n\n\n")
         s.append_to_caption("<b>Cloth Generation</b>\n")
         s.append_to_caption("Design and generate a custom cloth\n\n")
 
@@ -485,15 +490,15 @@ class renderer:
         s.append_to_caption("\n\n")
  
         s.append_to_caption("Rows: ")
-        self.rows_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config.rows))
+        self.rows_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config["rows"]))
         s.append_to_caption("  ")
  
         s.append_to_caption("Columns: ")
-        self.cols_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config.columns))
+        self.cols_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config["columns"]))
         s.append_to_caption("  ")
  
         s.append_to_caption("Particle Spacing: ")
-        self.spacing_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config.spacing))
+        self.spacing_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(self.cloth.config["spacing"]))
         s.append_to_caption("\n\n")
  
         s.append_to_caption("Structural Spring Constant: ")
@@ -508,12 +513,12 @@ class renderer:
         self.k_bend_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(params["k_bend"]))
         s.append_to_caption("\n\n")
  
-        s.append_to_caption("Damping Constant: ")
+        s.append_to_caption("Damping: ")
         self.damping_input = winput(type = "numeric", bind = lambda e: None, width = 50, text = str(params["damping"]))
-        s.append_to_caption("\n")
+        s.append_to_caption("\n\n")
 
         # pinned edges dropdown options
-        s.append_to_caption("Pinned Edges: ")
+        s.append_to_caption("Pinned Particles: ")
         s.append_to_caption("\n")
         initial_index = 0
         if getattr(self.cloth.config, "pin_top_corners", False):

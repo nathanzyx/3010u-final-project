@@ -1,5 +1,6 @@
 # 3D Mass-Spring Cloth Simulation
 **Course**: CSCI 3010U Simulation & Modeling
+
 **Author**: Nathan Tandory
 
 ## Overview
@@ -13,10 +14,13 @@ Detailed analysis, results, and discussion are provided in the course report PDF
 
 ## Setup
 
-Create and activate a virtual environment:
+Create a virtual environment:
 ```bash
 python -m venv .venv
+```
 
+Activate the virtual environment:
+```bash
 # for Windows:
 .venv\Scripts\activate
 
@@ -24,7 +28,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-Install dependencies:
+Install dependencies in the virtual environment:
 ```bash
 pip install setuptools numpy vpython
 ```
@@ -37,23 +41,42 @@ python src/main.py
 
 A browser window will open with the 3D visualization and control panel.
 
-## Controls
-- `Pause / Resume`: pause or resume the simulation
+## Usage & Controls
+
+![Control Panel](assets/control-panel.png)
+
+### Simulation Controls
+- `Pause/Resume`: pause or resume the simulation
 - `Reset Cloth`: reset the cloth to its initial state
-- `Sliders`: adjust gravity, particle mass, wind strength, wind angle, and time-step in real time
-- `Integrator dropdown`: switch between RK4 and Euler
-- `Cloth Generation panel`: configure grid size, spacing, spring constants, damping, and pinning, then click **Generate Cloth** to rebuild
+- `Quit`: quit the simulation
+- `Gravity`: adjust gravity in real time
+- `Particle Mass`: adjust particle mass in real time
+- `Wind Strength`: adjust wind strength in real time
+- `Wind Angle`: adjust wind angle in real time (X & Z axes)
+- `Time Step`: adjust time step in real time
+- `Integrator`: switch between **fourth-order Runge-Kutta** and **Euler** numerical integrators
+
+### Cloth Generation
+- `Generate Cloth`: generate a new cloth with the current parameters
+- `Reset Parameters`: reset cloth parameters to default values *(defaults defined in config.py)*
+- `Rows`: number of rows in the cloth
+- `Columns`: number of columns in the cloth
+- `Particle Spacing`: space between each particle
+- `Spring Constants`: spring constants for structural, shear, and bend springs
+- `Damping`: damping constant for all springs
+- `Pinned Particles`: selection of pinned particles
 
 ## Project Structure
 ```
 src/
-├── main.py                     # entry point and configuration
+├── main.py                     # simulation setup and main loop
+├── config.py                   # simulation and cloth configuration
 ├── models/
 │   └── cloth.py                # cloth grid structure, springs, and state
 ├── rendering/
 |   └── renderer.py             # vpython visualization and UI
 └── simulation/
-    ├── forces.py               # vectorized force computation
+    ├── derivatives.py          # vectorized derivative computation
     ├── integrators.py          # euler and rk4 integrators
-    └── simulation.py           # simulation loop and cloth management
+    └── simulation.py           # simulation functions and cloth management
 ```
