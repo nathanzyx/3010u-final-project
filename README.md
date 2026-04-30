@@ -21,10 +21,15 @@ python -m venv .venv
 
 Activate the virtual environment:
 ```bash
-# for Windows:
-.venv\Scripts\activate
+#
+#   Windows:
+#
+#       for Git Bash:
+source .venv/Scripts/activate
 
-# for macOS / Linux:
+#
+#   MacOS / Linux:
+#
 source .venv/bin/activate
 ```
 
