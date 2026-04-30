@@ -24,7 +24,7 @@ Activate the virtual environment:
 #
 #   Windows:
 #
-#       for Git Bash:
+# for Git Bash:
 source .venv/Scripts/activate
 
 #
